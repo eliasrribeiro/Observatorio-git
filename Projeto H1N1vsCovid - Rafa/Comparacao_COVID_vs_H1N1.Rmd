@@ -1,0 +1,1606 @@
+---
+title: "Análises do SIVEP-Gripe casos de H1N1 e COVID-19"
+date: "14/06/2021"
+output:
+  pdf_document: 
+    latex_engine: xelatex
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r pacotes,echo=FALSE,message=FALSE,warning =FALSE,error=FALSE,results='hide'}
+loadlibrary <- function(x) {
+  if (!require(x, character.only = TRUE)) {
+    install.packages(x, dependencies = T)
+    if (!require(x, character.only = TRUE))
+      stop("Package not found")
+  }
+}
+
+packages <-
+  c(
+    "dplyr",
+    "lubridate",
+    "readr",
+    "ggplot2",
+    "kableExtra",
+    "tables",
+    "questionr",
+    "car",
+    "data.table",
+    "magrittr",
+    "tidyverse",
+    "readxl",
+    "summarytools",
+    "zoo",
+    "grid",
+    "gridExtra",
+    "cowplot",
+    "modelsummary",
+    "effectsize",
+    "rcompanion",
+    "DescTools"
+  )
+lapply(packages, loadlibrary)
+
+setwd("~/Observatorio-git/Projeto H1N1vsCovid - Rafa")
+#carregando as base de dados 
+dados_covid<- read.csv("dados_covid.csv")
+dados_h1n1 <- read.csv("dados_h1n1.csv")
+dados_h1n1_sempcr <- read.csv("dados_h1n1_sempcr.csv")
+dados_h1n1_semfiltro <- read.csv("dados_h1n1_semfiltro.csv")
+dados_covid_sempcr <- read.csv("dados_COVID_21-05-2021.csv")
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning =FALSE,error=FALSE,results='hide'}
+#que vamos usar para medidas resumo
+media <- function(x) mean(x, na.rm = TRUE)
+mediana <- function(x) median(x, na.rm = TRUE)
+DP <- function(x) sd(x, na.rm = TRUE)
+minimo <- function(x) base::min(x, na.rm = TRUE)
+maximo <- function(x) base::max(x, na.rm = TRUE)
+q25 <- function(x) stats::quantile(x, p=0.25, na.rm=TRUE)
+q75 <- function(x) stats::quantile(x, p=0.75, na.rm=TRUE)
+IQR <- function(x) round(q75(x)-q25(x), 2)
+n <- function(x)  sum(!is.na(x))
+
+#vamos usar pro teste de Breslow-Day
+teste_breslowday <- function(dados_covid, dados_h1n1, var) {
+  tab <- array(0, dim = c(2,2,2))
+  tab[,,1] <- table(dados_h1n1$gestante_SN, dados_h1n1[[var]])
+  tab[,,2] <- table(dados_covid$gestante_SN, dados_covid[[var]])
+  a <- BreslowDayTest(tab, correct = TRUE)
+  out <- data.frame(comp = c("h1n1-covid"),
+    stat = c(a$statistic),
+    p_valor = c(a$p.value)
+    )
+  return(out)
+ }
+```
+
+Nesse relatório analisaremos algumas variáveis nas pandemias de H1N1 e da COVID-19. Além disso, nosso foco será comparar dentro dessas pandemias os grupos de gestantes versus não gestantes. E por útlimo, faremos uma breve análise dentro do grupo de gestantes nas duas pandemias (ideia para o 2º artigo).
+
+A base de dados da pandemia de H1N1 utilizada foi a base SIVEP-Gripe (Sistema de Informação da Vigilância Epidemiológica da Gripe) de 2009 e de 2010 filtrada com os casos  confirmados para H1N1 e teste pcr positivo, de mulheres em idade fértil (10 a 49 anos) gestantes e não gestantes, entre maio de 2009 a maio de 2010.  
+
+Já os dados da pandemia de COVID-19 foram obtidos a partir da filtragem da base de dados SIVEP-Gripe (Sistema de Informação da Vigilância Epidemiológica da Gripe) de 2020 e de 2021, com os casos  confirmados para COVID-19, de mulheres em idade fértil (10 a 49 anos) gestantes e não gestantes, entre março de 2020 a março de 2021.
+
+Inicialmente, iremos fazer uma breve análise dos critérios de diagnósticos utilizados na pandemia de COVID-19 e H1N1. Para essa análise, inicialmente a base de dados não terá o filtro de PCR positivo para covid-19 e para H1N1.
+
+```{r, echo=FALSE,message=FALSE,warning =FALSE,error=FALSE}
+#nova variável com label de critério
+dados_covid_sempcr <-  dados_covid_sempcr %>%
+  mutate(criterio = case_when(CRITERIO == 1 ~ "Laboratorial",
+                             CRITERIO == 2 | CRITERIO == 3 ~ "Clínico",
+                               TRUE ~ NA_character_))
+dados_h1n1_sempcr <-  dados_h1n1_sempcr %>%
+  mutate(criterio = case_when(CRITERIO == 1 ~ "Laboratorial",
+                             CRITERIO == 2  ~ "Clínico",
+                               TRUE ~ NA_character_))
+dados_covid <-  dados_covid %>%
+  mutate(criterio = case_when(CRITERIO == 1 ~ "Laboratorial",
+                             CRITERIO == 2 | CRITERIO == 3 ~ "Clínico",
+                               TRUE ~ NA_character_))
+dados_h1n1 <-  dados_h1n1 %>%
+  mutate(criterio = case_when(CRITERIO == 1 ~ "Laboratorial",
+                             CRITERIO == 2  ~ "Clínico",
+                               TRUE ~ NA_character_))
+```
+
+
+
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para resultado do PCR base COVID
+questionr::freq(
+  dados_covid_sempcr$criterio,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para Critério base Covid-19", digits = 2) 
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para resultado do PCR base H1N1
+questionr::freq(
+  dados_h1n1_sempcr$criterio,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para Critério base H1N1", digits = 2) 
+```
+
+```{r,echo=FALSE}
+#consertando modificação tabela com erros "nÃ£o"
+dados_covid <-  dados_covid %>%
+  mutate(gestante_SN = ifelse(CS_GESTANT == 5, "não", "sim"))
+```
+
+Agora filtrando o pcr positivo para covid e h1n1 nas basea de dados, vamos observar a frequencia da variável critério ja filtrada para os casos de pcr positivo para covid-19 e H1N1. 
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para resultado do PCR base COVID
+questionr::freq(
+  dados_covid$criterio,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para Critério base Covid-19 com filtro pcr positivo", digits = 2) 
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para resultado do PCR base H1N1
+questionr::freq(
+  dados_h1n1$criterio,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para Critério base H1N1 com filtro pcr positivo", digits = 2) 
+```
+
+Como observado nas tabelas existem algumas observações que tem como reposta critério clínico, sendo essas mesmas observações com resposta positivo para covid-19 e H1N1. 
+
+
+# Letalidade de gestante e não gestantes H1N1 
+
+A base utilizada foi a base de H1N1 com filtro apenas do período, pcr positivo e classi_fin == 1(h1n1).
+
+## Gestante 
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+dados_h1n1_semfiltro<-  dados_h1n1_semfiltro %>%
+  mutate(gest_SN = case_when(CS_GESTANT == 1 | CS_GESTANT == 2 | 
+                               CS_GESTANT == 3 | CS_GESTANT == 4   ~ "sim",
+                               TRUE ~ "não"))
+dados_gest<- dados_h1n1_semfiltro %>% 
+  filter(gest_SN == "sim")
+dados_gest <- dados_gest %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              EVOLUCAO == 3 ~ "obito",
+                              EVOLUCAO == 4 ~ "obito",
+                              TRUE ~ NA_character_))
+questionr::freq(
+  dados_gest$evolucao,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para Evolucao base H1N1", digits = 2) 
+```
+
+## Não gestante (independente do sexo)
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+dados_naogest<- dados_h1n1_semfiltro %>% 
+  filter(gest_SN == "não")
+dados_naogest <- dados_naogest %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              EVOLUCAO == 3 ~ "obito",
+                              EVOLUCAO == 4 ~ "obito",
+                              TRUE ~ NA_character_))
+questionr::freq(
+  dados_naogest$evolucao,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para Evolucao base H1N1", digits = 2) 
+```
+
+# Variáveis de caracterização
+
+Agora, iremos analisar as variáveis de caracterização contidas em ambas as bases (H1N1 e COVID-19), sendo elas: Idade, raça e faixa etária. 
+
+## Idade
+
+### H1N1
+
+```{r}
+## H1N1
+dados_h1n1 <- dados_h1n1 %>%
+  mutate(idade = NU_IDADE_N - round(NU_IDADE_N, -2))
+```
+
+Descritiva : 
+```{r}
+datasummary((gestante_SN) ~ idade*(n+media+DP+mediana+minimo+maximo+q25+q75+IQR),
+            data = dados_h1n1, output = 'markdown')
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#teste t
+t.test(idade ~ gestante_SN, data = dados_h1n1)
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito
+c_h1n1 <- cohens_d(idade ~ as.factor(gestante_SN), data=dados_h1n1)
+c_h1n1
+interpret_d(c_h1n1$Cohens_d,rules="cohen1988")
+```
+
+### Covid-19
+
+```{r}
+dados_covid$idade <- dados_covid$NU_IDADE_N
+datasummary((gestante_SN) ~ idade*(n+media+DP+mediana+minimo+maximo+q25+q75+IQR),
+            data = dados_covid, output = 'markdown')
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#teste t
+t.test(idade ~ gestante_SN, data = dados_covid)
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito de ed cohen
+c_covid <- cohens_d(idade ~ as.factor(gestante_SN), data=dados_covid)
+c_covid
+interpret_d(c_covid$Cohens_d,rules="cohen1988")
+```
+
+## Faixa etária
+
+### H1N1
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#Faixa etÃÂ¡ria
+dados_h1n1 <-  dados_h1n1 %>%
+  mutate(
+    faixa_et = case_when(
+      NU_IDADE_N <= 4019 ~ "<20",
+      NU_IDADE_N >= 4020
+      & NU_IDADE_N <= 4034 ~ "20-34",
+      NU_IDADE_N > 4034 ~ ">=35",
+      TRUE ~ NA_character_
+    )
+  )
+dados_h1n1$faixa_et <-
+  factor(dados_h1n1$faixa_et, levels = c("<20", "20-34", ">=35"))
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tabela cruzada
+with(dados_h1n1, ctable(faixa_et, gestante_SN, prop = "c", useNA = "no", chisq = TRUE))
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_h1n1$gestante_SN,dados_h1n1$faixa_et))
+```
+
+### Covid-19
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#Faixa etária
+dados_covid <-  dados_covid %>%
+  mutate(
+    faixa_et = case_when(
+      NU_IDADE_N <= 19 ~ "<20",
+      NU_IDADE_N >= 20
+      & NU_IDADE_N <= 34 ~ "20-34",
+      NU_IDADE_N > 34 ~ ">=35",
+      TRUE ~ NA_character_
+    )
+  )
+dados_covid$faixa_et <-
+  factor(dados_covid$faixa_et, levels = c("<20", "20-34", ">=35"))
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tabela cruzada
+with(dados_covid, ctable(faixa_et, gestante_SN, prop = "c", useNA = "no", chisq = TRUE))
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_covid$gestante_SN,dados_covid$faixa_et))
+```
+
+## Cor
+
+## H1N1
+
+```{r, echo=FALSE,message=FALSE,warning =FALSE,error=FALSE}
+dados_h1n1 <-  dados_h1n1 %>%
+  mutate(raca = case_when(CS_RACA == 1 ~ "Branca",
+                             CS_RACA == 2 ~ "Preta",
+                             CS_RACA == 3 ~ "Amarela",
+                             CS_RACA == 4 ~ "Parda",
+                             CS_RACA == 5 ~ "Indigena",
+                               TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#Tabela de frequÃÂªncia para RaÃÂ§a
+questionr::freq(
+  dados_h1n1$raca,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para Raça", digits = 2) 
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error= FALSE}
+#tabela cruzada
+with(dados_h1n1, ctable(raca, gestante_SN, prop="c",useNA = "no",chisq = FALSE))
+```
+
+Como existem caselas proximas de 5 iremos fazer um teste exato de Fisher :
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#teste exato de Fisher
+fisher.test(dados_h1n1$raca, dados_h1n1$gestante_SN,simulate.p.value = TRUE)
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_h1n1$gestante_SN,dados_h1n1$raca))
+```
+
+### Covid-19
+
+```{r, echo=FALSE,message=FALSE,warning =FALSE,error=FALSE}
+dados_covid <-  dados_covid %>%
+  mutate(raca = case_when(CS_RACA == 1 ~ "Branca",
+                             CS_RACA == 2 ~ "Preta",
+                             CS_RACA == 3 ~ "Amarela",
+                             CS_RACA == 4 ~ "Parda",
+                             CS_RACA == 5 ~ "Indigena",
+                               TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#Tabela de frequÃªncia para RaÃ§a
+questionr::freq(
+  dados_covid$raca,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para Raça", digits = 2) 
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados_covid, ctable(raca, gestante_SN, prop="c",useNA = "no",chisq = TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_covid$gestante_SN,dados_covid$raca))
+```
+
+# Deslocamento
+
+Iremos criar uma variável que indicará se o paciente se locomoveu para atendimento
+
+## Covid-19
+
+```{r}
+#Se mudança de município para atendimento 
+dados_covid <- dados_covid %>% 
+  mutate(mudou_muni = case_when((CO_MUN_RES == CO_MU_INTE) & 
+                                  !is.na(CO_MU_INTE) & !is.na(CO_MUN_RES) ~ "não",
+                                (CO_MUN_RES != CO_MU_INTE) & !is.na(CO_MU_INTE) & 
+                                  !is.na(CO_MUN_RES) ~ "sim",
+                                TRUE ~ NA_character_
+                                )
+  )
+```
+
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados_covid, ctable(gestante_SN, mudou_muni, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_covid$gestante_SN,dados_covid$mudou_muni))
+```
+
+Iremos fazer um mapa para visualizar a taxa de pessoas que se deslocam para atendimento por estados :
+ 
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#Covid-19
+d1 <- dados_covid
+estado <- sort(unique(d1$SG_UF_NOT))
+valor <- data.table(prop.table(table(d1$SG_UF_NOT,d1$mudou_muni),1))
+valor <- valor[valor$V2=="sim",]
+dt1_estadual <- data.frame("uf"=valor$V1,"T1"=valor$N*100)
+dt <- rbind(c("AC",12), c("AL",27), c("AP",16), c("AM",13), c("BA",29), 
+              c("CE",23), c("DF",53), c("ES",32), c("GO",52), c("MA",21), 
+              c("MT",51), c("MS",50), c("MG",31), c("PA",15), c("PB",25), 
+              c("PR",41), c("PE",26), c("PI",22), c("RN",24), c("RS",43), 
+              c("RJ",33), c("RO",11), c("RR",14), c("SC",42), c("SP",35), 
+              c("SE",28), c("TO",17)) %>% data.table %>% `colnames<-`(c("uf","id"))
+mapaUF <- readRDS("mapaUF.Rds")
+dt1 <- full_join(dt, dt1_estadual, by = "uf")
+ggplot(dt1) + geom_map(map = mapaUF, color = 'gray30', aes_string(map_id = "id", fill = "T1")) + geom_path(data = mapaUF, color = 'gray30', size = .1, aes(x = long, y = lat, group = group)) + theme_void() + coord_equal() + labs(fill = "Taxa de deslocamento [%]",title="Casos de Covid-19") + scale_fill_gradient2(breaks=c(0,25,50,75),limits=c(0,75), low = "blue", mid = "white",high = "purple") 
+```
+
+## H1N1
+
+```{r}
+#Se mudança de município para atendimento 
+dados_h1n1 <- dados_h1n1 %>% 
+  mutate(mudou_muni = case_when((ID_MN_RESI  == CO_MU_INTE) & 
+                                  !is.na(CO_MU_INTE) & !is.na(ID_MN_RESI) ~ "não",
+                                (ID_MN_RESI != CO_MU_INTE) & !is.na(CO_MU_INTE) & 
+                                  !is.na(ID_MN_RESI) ~ "sim",
+                                TRUE ~ NA_character_
+                                )
+  )
+
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados_h1n1, ctable(gestante_SN, mudou_muni, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_h1n1$gestante_SN,dados_h1n1$mudou_muni))
+```
+
+Iremos fazer um mapa para visualizar a taxa de pessoas que se deslocam para atendimento por estados :
+ 
+```{r, echo=TRUE,message=FALSE, warning=FALSE,error=FALSE}
+#H1N1
+d1 <- dados_h1n1
+valor <- data.table(prop.table(table(d1$SG_UF_NOT,d1$mudou_muni),1))
+valor <- valor[valor$V2=="sim",]
+dt1_estadual <- data.frame("id"=valor$V1,"T1"=valor$N*100)
+dt <- rbind(c("AC",12), c("AL",27), c("AP",16), c("AM",13), c("BA",29), 
+              c("CE",23), c("DF",53), c("ES",32), c("GO",52), c("MA",21), 
+              c("MT",51), c("MS",50), c("MG",31), c("PA",15), c("PB",25), 
+              c("PR",41), c("PE",26), c("PI",22), c("RN",24), c("RS",43), 
+              c("RJ",33), c("RO",11), c("RR",14), c("SC",42), c("SP",35), 
+              c("SE",28), c("TO",17)) %>% data.table %>% `colnames<-`(c("uf","id"))
+mapaUF <- readRDS("mapaUF.Rds")
+dt1 <- full_join(dt, dt1_estadual, by = "id")
+ggplot(dt1) + geom_map(map = mapaUF, color = 'gray30', aes_string(map_id = "id", fill = "T1")) + geom_path(data = mapaUF, color = 'gray30', size = .1, aes(x = long, y = lat, group = group)) + theme_void() + coord_equal() + labs(fill = "Taxa de deslocamento [%]",title="Casos de H1N1") + scale_fill_gradient2(breaks=c(0,25,50,75),limits=c(0,75), low = "blue", mid = "white",high = "purple") 
+```
+
+```{r, echo=TRUE,message=FALSE, warning=FALSE,error=FALSE}
+#Teste de Breslow-Day
+teste_breslowday(dados_covid,dados_h1n1,"mudou_muni")
+```
+
+
+# Vacina
+
+Agora iremos analisar os casos onde o paciente já foi vacinado ou não contra a gripe.
+
+### H1N1
+
+```{r}
+#Se tomou vacina anti-gripal
+dados_h1n1 <- dados_h1n1 %>% 
+  mutate(vacina = case_when(VACINA == 1 ~ "Sim",
+                            VACINA == 2 ~ "Não",
+                            TRUE ~ NA_character_)
+         )
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados_h1n1, ctable(gestante_SN, vacina, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_h1n1$gestante_SN,dados_h1n1$vacina))
+```
+
+### Covid-19
+
+```{r}
+#Se tomou vacina anti-gripal 
+dados_covid <- dados_covid %>% 
+  mutate(vacina = case_when(VACINA == 1 ~ "Sim",
+                            VACINA == 2 ~ "Não",
+                            TRUE ~ NA_character_)
+         )
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados_covid, ctable(gestante_SN, vacina, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_covid$gestante_SN,dados_covid$vacina))
+```
+
+```{r, echo=TRUE,message=FALSE, warning=FALSE,error=FALSE}
+#Teste de Breslow-Day
+teste_breslowday(dados_covid,dados_h1n1,"vacina")
+```
+
+# Sintomas
+
+Agora iremos analisar as variáveis dos sintomas das bases de covid-19 e H1N1.
+
+## Febre
+
+### H1N1
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+dados_h1n1 <-  dados_h1n1 %>%
+  mutate(febre = case_when(FEBRE == 1 ~ "sim",
+                              FEBRE == 2 ~ "não",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados_h1n1, ctable(gestante_SN, febre, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_h1n1$gestante_SN,dados_h1n1$febre))
+```
+
+### COVID-19
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+dados_covid <-  dados_covid %>%
+  mutate(febre = case_when(FEBRE == 1 ~ "sim",
+                              FEBRE == 2 ~ "não",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados_covid, ctable(gestante_SN, febre, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_covid$gestante_SN,dados_covid$febre))
+```
+
+```{r, echo=TRUE,message=FALSE, warning=FALSE,error=FALSE}
+#Teste de Breslow-Day
+teste_breslowday(dados_covid,dados_h1n1,"febre")
+```
+
+## Tosse
+
+### H1N1
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+dados_h1n1 <-  dados_h1n1 %>%
+  mutate(tosse = case_when(TOSSE == 1 ~ "sim",
+                              TOSSE == 2 ~ "não",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados_h1n1, ctable(gestante_SN, tosse, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_h1n1$gestante_SN,dados_h1n1$tosse))
+```
+
+### COVID-19
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+dados_covid <-  dados_covid %>%
+  mutate(tosse = case_when(TOSSE == 1 ~ "sim",
+                              TOSSE == 2 ~ "não",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados_covid, ctable(gestante_SN, tosse, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_covid$gestante_SN,dados_covid$tosse))
+```
+
+```{r, echo=TRUE,message=FALSE, warning=FALSE,error=FALSE}
+#Teste de Breslow-Day
+teste_breslowday(dados_covid,dados_h1n1,"tosse")
+```
+
+## Dispneia 
+
+### H1N1
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+dados_h1n1 <-  dados_h1n1 %>%
+  mutate(dispneia = case_when(DISPNEIA == 1 ~ "sim",
+                              DISPNEIA == 2 ~ "não",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados_h1n1, ctable(gestante_SN, dispneia, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_h1n1$gestante_SN,dados_h1n1$dispneia))
+```
+
+### COVID-19
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+dados_covid <-  dados_covid %>%
+  mutate(dispneia = case_when(DISPNEIA == 1 ~ "sim",
+                              DISPNEIA == 2 ~ "não",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados_covid, ctable(gestante_SN, dispneia, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_covid$gestante_SN,dados_covid$dispneia))
+```
+
+```{r, echo=TRUE,message=FALSE, warning=FALSE,error=FALSE}
+#Teste de Breslow-Day
+teste_breslowday(dados_covid,dados_h1n1,"dispneia")
+```
+
+## Dor de garganta 
+
+### H1N1
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+dados_h1n1 <-  dados_h1n1 %>%
+  mutate(garganta = case_when(GARGANTA == 1 ~ "sim",
+                              GARGANTA  == 2 ~ "não",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados_h1n1, ctable(gestante_SN, garganta, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_h1n1$gestante_SN,dados_h1n1$garganta))
+```
+
+### COVID-19
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+dados_covid <-  dados_covid %>%
+  mutate(garganta = case_when(GARGANTA == 1 ~ "sim",
+                              GARGANTA  == 2 ~ "não",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados_covid, ctable(gestante_SN, garganta, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_covid$gestante_SN,dados_covid$vacina))
+```
+
+```{r, echo=TRUE,message=FALSE, warning=FALSE,error=FALSE}
+#Teste de Breslow-Day
+teste_breslowday(dados_covid,dados_h1n1,"garganta")
+```
+
+## Diarreia
+
+### H1N1
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+dados_h1n1 <-  dados_h1n1 %>%
+  mutate(diarreia = case_when(DIARREIA == 1 ~ "sim",
+                              DIARREIA == 2 ~ "não",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados_h1n1, ctable(gestante_SN, diarreia, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_h1n1$gestante_SN,dados_h1n1$diarreia))
+```
+
+### COVID-19
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+dados_covid <-  dados_covid %>%
+  mutate(diarreia = case_when(DIARREIA == 1 ~ "sim",
+                              DIARREIA == 2 ~ "não",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados_covid, ctable(gestante_SN, diarreia, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_covid$gestante_SN,dados_covid$diarreia))
+```
+
+```{r, echo=TRUE,message=FALSE, warning=FALSE,error=FALSE}
+#Teste de Breslow-Day
+teste_breslowday(dados_covid,dados_h1n1,"diarreia")
+```
+
+# Comorbidades
+
+Iremos analisar as variáveis de comorbidades para as duas pandemias. Sendo essas: Cardiopatia, pneumopatia, renal, imunodepressão, hematologia e diabetes.
+
+Para fazermos essa análise iremos organizar e rotular todas essas variáveis referentes as comorbidades.
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+## Base H1N1
+
+dados_h1n1 <- dados_h1n1 %>%
+  mutate(cardiopati = case_when(CARDIOPATI == 1 ~ "Sim",
+                                CARDIOPATI == 2 ~ "Não",
+                                TRUE ~ NA_character_))
+
+dados_h1n1 <- dados_h1n1 %>%
+  mutate(pneumopati = case_when(PNEUMOPATI == 1 ~ "Sim",
+                                PNEUMOPATI == 2 ~ "Não",
+                                TRUE ~ NA_character_))
+
+dados_h1n1 <- dados_h1n1 %>%
+  mutate(renal = case_when(RENAL == 1 ~ "Sim",
+                           RENAL == 2 ~ "Não",
+                           TRUE ~ NA_character_))
+
+dados_h1n1 <- dados_h1n1 %>%
+  mutate(imunodepre = case_when(IMUNODEPRE == 1 ~ "Sim",
+                                IMUNODEPRE == 2 ~ "Não",
+                                TRUE ~ NA_character_))
+dados_h1n1 <- dados_h1n1 %>%
+  mutate(hematologi = case_when(HEMOGLOBI == 1 ~ "Sim",
+                                HEMOGLOBI == 2 ~ "Não",
+                                TRUE ~ NA_character_))
+
+
+# Base do COVID
+
+dados_covid <- dados_covid %>%
+  mutate(cardiopati = case_when(CARDIOPATI == 1 ~ "Sim",
+                                CARDIOPATI == 2 ~ "Não",
+                                TRUE ~ NA_character_))
+
+dados_covid <- dados_covid %>%
+  mutate(pneumopati = case_when((PNEUMOPATI == 1 | ASMA == 1) ~ "Sim",
+                                (PNEUMOPATI == 2 | ASMA == 2) ~ "Não",
+                                TRUE ~ NA_character_))
+
+dados_covid <- dados_covid %>%
+  mutate(renal = case_when(RENAL == 1 ~ "Sim",
+                           RENAL == 2 ~ "Não",
+                           TRUE ~ NA_character_))
+
+dados_covid <- dados_covid %>%
+  mutate(imunodepre = case_when(IMUNODEPRE == 1 ~ "Sim",
+                                IMUNODEPRE == 2 ~ "Não",
+                                TRUE ~ NA_character_))
+
+dados_covid <- dados_covid %>%
+  mutate(hematologi = case_when(HEMATOLOGI == 1 ~ "Sim",
+                                HEMATOLOGI == 2 ~ "Não",
+                                TRUE ~ NA_character_))
+
+```
+
+Com nossa base já estruturada, iremos fazer uma breve análise dessas variáveis.
+
+## Cardiopatia 
+
+###  H1N1:
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tabela cruzada
+with(dados_h1n1, ctable(gestante_SN, cardiopati, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_h1n1$gestante_SN,dados_h1n1$cardiopati))
+```
+
+###  COVID-19:
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tabela cruzada
+with(dados_covid, ctable(gestante_SN, cardiopati, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_covid$gestante_SN,dados_covid$cardiopati))
+```
+
+```{r, echo=TRUE,message=FALSE, warning=FALSE,error=FALSE}
+#Teste de Breslow-Day
+teste_breslowday(dados_covid,dados_h1n1,"cardiopati")
+```
+
+## Pneumopatia 
+
+###  H1N1:
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tabela cruzada
+with(dados_h1n1, ctable(gestante_SN, pneumopati, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_h1n1$gestante_SN,dados_h1n1$pneumopati))
+```
+
+###  COVID-19:
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tabela cruzada
+with(dados_covid, ctable(gestante_SN, pneumopati, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_covid$gestante_SN,dados_covid$pneumopati))
+```
+
+```{r, echo=TRUE,message=FALSE, warning=FALSE,error=FALSE}
+#Teste de Breslow-Day
+teste_breslowday(dados_covid,dados_h1n1,"pneumopati")
+```
+
+## Renal
+
+###  H1N1:
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tabela cruzada
+with(dados_h1n1, ctable(gestante_SN, renal, prop = "r", useNA = "no", chisq = FALSE, OR=TRUE))
+```
+Como existem caselas muito proximas de 5 iremos fazer um teste exato de Fisher
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#teste exato de Fisher
+fisher.test(dados_h1n1$renal, dados_h1n1$gestante_SN)
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_h1n1$gestante_SN,dados_h1n1$renal))
+```
+
+###  COVID-19:
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tabela cruzada
+with(dados_covid, ctable(gestante_SN, renal, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_covid$gestante_SN,dados_covid$renal))
+```
+
+```{r, echo=TRUE,message=FALSE, warning=FALSE,error=FALSE}
+#Teste de Breslow-Day
+teste_breslowday(dados_covid,dados_h1n1,"renal")
+```
+
+## Imunodepressão 
+
+###  H1N1:
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tabela cruzada
+with(dados_h1n1, ctable(gestante_SN, imunodepre, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_h1n1$gestante_SN,dados_h1n1$imunodepre))
+```
+
+###  COVID-19:
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tabela cruzada
+with(dados_covid, ctable(gestante_SN, imunodepre, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_covid$gestante_SN,dados_covid$imunodepre))
+```
+
+```{r, echo=TRUE,message=FALSE, warning=FALSE,error=FALSE}
+#Teste de Breslow-Day
+teste_breslowday(dados_covid,dados_h1n1,"imunodepre")
+```
+
+## Hematologia
+
+###  H1N1:
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tabela cruzada
+with(dados_h1n1, ctable(gestante_SN, hematologi, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_h1n1$gestante_SN,dados_h1n1$hematologi))
+```
+
+###  COVID-19:
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tabela cruzada
+with(dados_covid, ctable(gestante_SN, hematologi, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_covid$gestante_SN,dados_covid$hematologi))
+```
+
+```{r, echo=TRUE,message=FALSE, warning=FALSE,error=FALSE}
+#Teste de Breslow-Day
+teste_breslowday(dados_covid,dados_h1n1,"hematologi")
+```
+
+# Critério de Gravidade
+
+Iremo analisar agora, a gravidade dos casos. Para isso, foi levado em consideração casos graves aqueles que houveram internação, e casos menos graves aqueles os quais não houveram internação.
+
+Como ponto inicial, criamos uma variável de gravidade.
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+# PARA a base do H1N1
+dados_h1n1 <- dados_h1n1 %>%
+  mutate(gravidade = factor(case_when(HOSPITAL == 1 ~ "internou",
+                               HOSPITAL == 2 ~ "não internou",
+                              TRUE ~ NA_character_)))
+dados_h1n1$gravidade <- relevel(
+  dados_h1n1$gravidade, 
+  ref = "não internou"
+)
+# PARA a base do COVID
+dados_covid <- dados_covid %>%
+  mutate(gravidade = factor(case_when(HOSPITAL == 1 ~ "internou",
+                               HOSPITAL == 2 ~ "não internou",
+                               TRUE ~ NA_character_)))
+dados_covid$gravidade <- relevel(
+  dados_covid$gravidade, 
+  ref = "não internou"
+)
+```
+
+Agora, iremos analisar a taxa de casos com internação e não internação
+
+### H1N1
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tabela cruzada
+with(dados_h1n1, ctable(gestante_SN, gravidade, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_h1n1$gestante_SN,dados_h1n1$gravidade))
+```
+
+### COVID-19
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tabela cruzada
+with(dados_covid, ctable(gestante_SN, gravidade, prop = "r", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_covid$gestante_SN,dados_covid$gravidade))
+```
+
+```{r, echo=TRUE,message=FALSE, warning=FALSE,error=FALSE}
+#Teste de Breslow-Day
+teste_breslowday(dados_covid,dados_h1n1,"gravidade")
+```
+
+# Desfecho
+
+Será analisada a variável que informa o desfecho do caso, sendo esses: Cura ou óbito.
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+# BASE H1N1
+dados_h1n1 <- dados_h1n1 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              EVOLUCAO == 3 ~ "obito",
+                              EVOLUCAO == 4 ~ "obito",
+                              TRUE ~ NA_character_))
+# BASE COVID-19
+dados_covid <- dados_covid %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              EVOLUCAO == 3 ~ "obito",
+                              TRUE ~ NA_character_))
+
+```
+
+### H1N1
+
+```{r}
+with(dados_h1n1, ctable(gestante_SN, evolucao, prop="r", OR=TRUE, useNA = "no", chisq = TRUE))
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_h1n1$gestante_SN,dados_h1n1$evolucao))
+```
+
+### COVID-19
+
+```{r}
+with(dados_covid, ctable(gestante_SN, evolucao, prop="r", OR=TRUE, useNA = "no", chisq = TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_covid$gestante_SN,dados_covid$evolucao))
+```
+
+```{r, echo=TRUE,message=FALSE, warning=FALSE,error=FALSE}
+#Teste de Breslow-Day
+teste_breslowday(dados_covid,dados_h1n1,"evolucao")
+```
+
+# Desfecho para casos onde houve internação
+
+Será analisada a variável que informa o desfecho do caso, filtrados por `gravidade=="internou"`, sendo esses: Cura ou óbito.
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+# BASE H1N1
+dados_h1n1_int <- dados_h1n1 %>%
+  filter(gravidade=="internou")
+# BASE COVID-19
+dados_covid_int <- dados_covid %>%
+  filter(gravidade=="internou")
+```
+
+### H1N1
+
+```{r}
+#tabela cruzada
+with(dados_h1n1_int, ctable(gestante_SN, evolucao, prop="r", OR=TRUE, useNA = "no", chisq = TRUE))
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_h1n1_int$gestante_SN,dados_h1n1_int$evolucao))
+```
+
+### COVID-19
+
+```{r}
+#tabela cruzada
+with(dados_covid_int, ctable(gestante_SN, evolucao, prop="r", OR=TRUE, useNA = "no", chisq = TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_covid_int$gestante_SN,dados_covid_int$evolucao))
+```
+
+```{r, echo=TRUE,message=FALSE, warning=FALSE,error=FALSE}
+#Teste de Breslow-Day
+teste_breslowday(dados_covid_int,dados_h1n1_int,"evolucao")
+```
+
+# Desfecho para casos onde não houve internação
+
+Será analisada a variável que informa o desfecho do caso, filtrados por `gravidade=="não internou"`, sendo esses: Cura ou óbito.
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+# BASE H1N1
+dados_h1n1_naoint <- dados_h1n1 %>%
+  filter(gravidade=="não internou")
+# BASE COVID-19
+dados_covid_naoint <- dados_covid %>%
+  filter(gravidade=="não internou")
+
+```
+
+### H1N1
+
+```{r}
+#tabela cruzada
+with(dados_h1n1_naoint, ctable(gestante_SN, evolucao, prop="r", OR=TRUE, useNA = "no", chisq = FALSE))
+```
+Como existem caselas proximas de 5 iremos fazer um teste exato de Fisher :
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#teste exato de Fisher
+fisher.test(dados_h1n1_naoint$evolucao, dados_h1n1_naoint$gestante_SN)
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_h1n1_naoint$gestante_SN,dados_h1n1_naoint$evolucao))
+```
+
+### COVID-19
+
+```{r}
+#tabela cruzada
+with(dados_covid_naoint, ctable(gestante_SN, evolucao, prop="r", OR=TRUE, useNA = "no", chisq = FALSE))
+```
+Como existem caselas proximas de 5 iremos fazer um teste exato de Fisher :
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#teste exato de Fisher
+fisher.test(dados_covid_naoint$evolucao, dados_covid_naoint$gestante_SN)
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados_covid_naoint$gestante_SN,dados_covid_naoint$evolucao))
+```
+
+```{r, echo=TRUE,message=FALSE, warning=FALSE,error=FALSE}
+#Teste de Breslow-Day
+teste_breslowday(dados_covid_naoint,dados_h1n1_naoint,"evolucao")
+```
+
+# Casos apenas de gestantes nas duas pandemias (2º Artigo)
+
+Nessa seção serão analisados apenas os casos de mulheres gestantes nas duas pandemias.
+Para isso criamos uma coluna que indica de qual pandemia se trata aquele caso (H1N1 ou Covid-19).
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+dados_covid <- dados_covid %>% 
+  mutate(pandemia = factor(case_when(gestante_SN == "sim" ~ "Covid-19",
+                              TRUE ~ NA_character_)))
+dados_h1n1 <- dados_h1n1 %>% 
+  mutate(pandemia = factor(case_when(gestante_SN == "sim" ~ "H1N1",
+                              TRUE ~ NA_character_)))
+
+df1 <- dados_covid %>% 
+  select(faixa_et,gestante_SN,raca,vacina,febre,tosse,dispneia,diarreia,garganta,pandemia,cardiopati,pneumopati,renal,imunodepre,hematologi,gravidade,evolucao,idade) %>% 
+  filter(gestante_SN=="sim")
+
+df2 <- dados_h1n1 %>% 
+  select(faixa_et,gestante_SN,raca,vacina,febre,tosse,dispneia,diarreia,garganta,pandemia,cardiopati,pneumopati,renal,imunodepre,hematologi,gravidade,evolucao,idade) %>% 
+  filter(gestante_SN=="sim")
+
+dados <- full_join(df1, df2)
+
+dados$pandemia <- relevel(
+  dados$pandemia, 
+  ref = "H1N1"
+)
+```
+
+## Idade 
+
+```{r}
+datasummary((pandemia) ~ idade*(n+media+DP+mediana+minimo+maximo+q25+q75+IQR),
+            data = dados, output = 'markdown')
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#teste t
+t.test(idade ~ pandemia, data = dados)
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito
+c <- cohens_d(idade ~ as.factor(pandemia), data=dados)
+c
+interpret_d(c$Cohens_d,rules="cohen1988")
+```
+
+##Faixa Etária
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tabela cruzada
+with(dados, ctable(faixa_et, pandemia, prop = "c", useNA = "no", chisq = TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados$pandemia,dados$faixa_et))
+```
+
+## Raça 
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados, ctable(raca, pandemia,prop = "c", useNA = "no",chisq = FALSE))
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#teste exato de Fisher
+fisher.test(dados$raca, dados$pandemia,simulate.p.value = TRUE)
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados$pandemia,dados$raca))
+```
+
+## Vacina 
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados, ctable(pandemia, vacina, prop ="c", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados$pandemia,dados$vacina))
+```
+
+## Febre
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados, ctable(pandemia, febre, prop = "c", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados$pandemia,dados$febre))
+```
+
+## Tosse 
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados, ctable(pandemia, tosse, prop = "c", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados$pandemia,dados$tosse))
+```
+
+## Dispneia
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados, ctable(pandemia, dispneia, prop ="c", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados$pandemia,dados$dispneia))
+```
+
+## Dor de Garganta
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados, ctable(pandemia, garganta, prop = "c", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados$pandemia,dados$garganta))
+```
+
+## Diarreia
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados, ctable(pandemia, diarreia, prop = "c", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados$pandemia,dados$diarreia))
+```
+
+## Cardiopatia 
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados, ctable(pandemia, cardiopati, prop = "c", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados$pandemia,dados$cardiopati))
+```
+
+## Pneumopatia
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados, ctable(pandemia, pneumopati, prop = "c", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados$pandemia,dados$pneumopati))
+```
+
+## Renal
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados, ctable(pandemia, renal, prop = "c", useNA = "no", chisq =FALSE, OR=TRUE))
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#teste exato de Fisher
+fisher.test(dados$renal, dados$pandemia)
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados$pandemia,dados$renal))
+```
+
+## Imunodepressão
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados, ctable(pandemia, imunodepre, prop = "c", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados$pandemia,dados$imunodepre))
+```
+
+## Hematologia
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados, ctable(pandemia, hematologi, prop = "c", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados$pandemia,dados$hematologi))
+```
+
+## Gravidade
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada
+with(dados, ctable(pandemia, gravidade, prop = "c", useNA = "no", chisq = TRUE, OR=TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados$pandemia,dados$gravidade))
+```
+
+# Desfecho
+
+Será analisada a variável que informa o desfecho do caso, sendo esses: Cura ou óbito.
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+with(dados, ctable(pandemia, evolucao, prop="c", OR=TRUE, useNA = "no", chisq = TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados$pandemia,dados$evolucao))
+```
+
+# Desfecho casos internados
+
+Será analisada a variável que informa o desfecho do caso, com filtro `gravidade=="internou"` sendo esses: Cura ou óbito.
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+dados1 <- dados %>% 
+  filter(gravidade=="internou")
+with(dados1, ctable(pandemia, evolucao, prop="c", OR=TRUE, useNA = "no", chisq = TRUE))
+```
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados1$pandemia,dados1$evolucao))
+```
+
+# Desfecho casos não internados
+
+Será analisada a variável que informa o desfecho do caso, com filtro `gravidade=="não internou"` sendo esses: Cura ou óbito.
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+dados2 <- dados %>% 
+  filter(gravidade=="não internou")
+with(dados2, ctable(pandemia, evolucao, prop="c", OR=TRUE, useNA = "no", chisq = FALSE))
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#teste exato de Fisher
+fisher.test(dados2$evolucao, dados2$pandemia)
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#tamanho de efeito V de cramer
+# 0.10 – < 0.30 - pequeno
+# 0.30 – < 0.50 - medio
+# ≥ 0.50 - grande
+cramerV(table(dados2$pandemia,dados2$evolucao))
+```

@@ -1,0 +1,279 @@
+---
+title: "Seleção dos casos de COVID-19 para paper de comparação com H1N1"
+author: 'Gestantes'
+date: "29/05/2021"
+output:   
+  pdf_document:
+    keep_tex: yes
+  word_document: default
+  html_document:
+    df_print: paged
+    self_contained: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Sobre a base de dados e pacotes do R utilizados
+
+ A seguir são carregados os pacotes do R (https://www.r-project.org) utilizados para filtragem e tratamento dos dados. 
+ 
+```{r pacotes, echo=TRUE, message=FALSE, warning =FALSE,error=FALSE, results='hide'}
+#carregar pacotes
+loadlibrary <- function(x) {
+  if (!require(x, character.only = TRUE)) {
+    install.packages(x, dependencies = T)
+    if (!require(x, character.only = TRUE))
+      stop("Package not found")
+  }
+}
+
+packages <-
+  c(
+    "readxl",
+    "janitor",
+    "dplyr",
+    "skimr",
+    "forcats",
+    "stringr",
+    "lubridate",
+    "readr",
+    "summarytools",
+    "knitr",
+    "pander",
+    "modelsummary",
+    "magrittr",
+    "ggplot2",
+    "rgdal",
+    "tm",
+    "wordcloud",
+    "kableExtra",
+    "tables",
+    "questionr",
+    "corrplot",
+    "wordcloud2",
+    "dlookr",
+    "patchwork",
+    "sjPlot",
+    "readr",
+    "broom",
+    "gmodels",
+    "epitools",
+    "survival",
+    "survminer",
+    "nortest",
+    "car",
+    "tidylog",
+    "gtsummary",
+    "writexl"
+  )
+lapply(packages, loadlibrary)
+
+
+## Packages ##
+library(ggplot2)         # fazer gráficos
+library(rgdal)           # ler arquivos de mapas
+library(dplyr)           # fazer manipulação de banco de dados
+library(leaflet)         # gráficos com mapas interativos.
+library(readxl)
+library(highcharter)
+library(geobr)
+```
+
+A base de dados SIVEP-Gripe (Sistema de Informação da Vigilância Epidemiológica da Gripe) tem os registros dos casos e óbitos de SRAG (Síndrome Respiratória Aguda Grave). A notificação é compulsória para síndrome gripal (caracterizado por pelo menos dois dos seguintes sinais e sintomas: febre, mesmo que referida, calafrios, dor de garganta, dor de cabeça, tosse, coriza, distúrbios olfatórios ou de paladar) e que tem dispneia / desconforto respiratório ou pressão persistente no peito ou Saturação de O2 menor que 95\% no ar ambiente ou cor azulada dos lábios ou rosto. Indivíduos assintomáticos com confirmação laboratorial por biologia molecular ou exame imunológico para infecção por COVID-19 também são relatados.
+
+Para notificações no Sivep-Gripe, os casos hospitalizados em hospitais públicos e privados e todas as mortes devido a infecções respiratórias agudas graves, independentemente da hospitalização, devem ser considerados.
+
+A vigilância da SRAG no Brasil é desenvolvida pelo Ministério da Saúde (MS), por meio da Secretaria de Vigilância em Saúde (SVS), desde a pandemia de Influenza A (H1N1) em 2009. 
+Mais informações em https://coronavirus.saude.gov.br/definicao-de-caso-e-notificacao.
+
+O período analisado compreende de dados epidemiológicos de 2020, com banco de dados obtido em 19/05/2021 no site https://opendatasus.saude.gov.br/dataset/bd-srag-2020, e de 2021, com banco de dados obtido em 19/05/2021 no site https://opendatasus.saude.gov.br/dataset/bd-srag-2021. Os dados de 2020 e de 2021 são carregados e combinados abaixo:
+
+
+```{r,echo=TRUE,message=FALSE,warning =FALSE,error=FALSE,results='hide'}
+######### carregando as bases de dados ###########
+#2021
+dados_2021 <- read_delim(
+  "INFLUD21-17-05-2021.csv",
+  ";",
+  escape_double = FALSE,
+  locale = locale(encoding = "ISO-8859-2"),
+  trim_ws = TRUE
+)
+
+#2020
+dados_2020 <- read_delim(
+  "INFLUD-17-05-2021.csv",
+  ";",
+  escape_double = FALSE,
+  locale = locale(encoding = "ISO-8859-2"),
+  trim_ws = TRUE
+)
+
+sem <- 19
+
+memory.limit(999999)
+
+#### Concatenar dados 2020 e 2021 ##############
+dados1 <- rbind(dados_2020, dados_2021)
+
+#Criar variavel de ano do caso
+dados1 <-  dados1 %>%
+  dplyr::mutate(
+    dt_sint = as.Date(DT_SIN_PRI, format = "%d/%m/%Y"),
+    ano = lubridate::year(dt_sint),
+    mes = lubridate::month(dt_sint)
+  )
+```
+ 
+ Há atualmente `r dim(dados1)[1]` observações na base de dados e são as variáveis:
+ 
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+names(dados1)
+```
+ Para ver o dicionário das variáveis, acesse: https://opendatasus.saude.gov.br/dataset/ae90fa8f-3e94-467e-a33f-94adbb66edf8/resource/8f571374-c555-4ec0-8e44-00b1e8b11c25/download/dicionario-de-dados-srag-hospitalizado-27.07.2020-final.pdf
+ 
+ 
+# Filtragem e tratamento dos dados para projeto
+
+A primeira filtragem consiste em selecionar  as semanas epidemiológicas de sintomas da análise em 2020 e em 2021. 
+
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#seleção das semanas epidemiológicas de 2020 e de 2021
+dados2 <- dados1 %>% 
+  filter((ano==2020 & SEM_PRI >=8) | ano ==2021)
+
+dados2 <- dados2 %>% 
+  mutate(ano = ifelse(ano ==2021 & SEM_PRI ==53, 2020, ano)) %>%   filter(ano==2020 | (ano ==2021 & SEM_PRI <= sem))
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+with(dados2, ctable(SEM_PRI, ano))
+```
+
+Há `r dim(dados2)[1]` observações na base de dados.
+
+
+Vamos selecionar os casos de março de 2020 até março de 2021. 
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#filtrando só os casos de março de 2020 até março de 2021
+dados3 <- filter(dados2, 
+                 (mes >=3 & ano == 2020) | (mes <=3 & ano == 2021))
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+with(dados3, ctable(SEM_PRI, ano))
+```
+
+Há `r dim(dados3)[1]` observações na base de dados.
+
+A próxima seleção de pessoas do sexo feminino:
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#filtrando F
+dados4 <- filter(dados3, CS_SEXO == "F")
+```
+
+Há `r dim(dados4)[1]` observações na base de dados.
+
+O próximo passo é filtrar só as mulheres entre 10 e 49 anos.
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+# filtro de idade
+dados5 <- filter(dados4, NU_IDADE_N > 9 & NU_IDADE_N < 50)
+```
+
+Há `r dim(dados5)[1]` observações na base de dados.
+
+
+Agora vamos selecionar só as pessoas gestantes ou não gestante.
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+with(dados5, freq(CS_GESTANT))
+
+dados5 <- dados5 %>%
+  mutate(
+    classi_gesta = case_when(
+      CS_GESTANT == 1  ~ "1tri",
+      CS_GESTANT == 2  ~ "2tri",
+      CS_GESTANT == 3  ~ "3tri",
+      CS_GESTANT == 4  ~ "IG_ig",
+      CS_GESTANT == 5  ~ "não",
+      TRUE ~ NA_character_
+    )
+  )
+
+#filtrando só gestante ou não gestante
+dados6 <- dados5 %>% 
+  filter(!is.na(classi_gesta))
+
+
+# Criando a variável gestante_SN
+dados6 <- dados6 %>%
+  mutate(gestante_SN = ifelse(CS_GESTANT == 5, "não", "sim"))
+```
+
+Há `r dim(dados6)[1]` observações na base de dados.
+
+A próxima seleção são os casos de covid indicado pela variável `CLASSI_FIN`. 
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+with(dados6, freq(CLASSI_FIN))
+
+dados7 <- dados6 %>% 
+  filter(CLASSI_FIN == 5)
+```
+
+Há `r dim(dados7)[1]` observações na base de dados.
+
+Agora vamos criar a variável se `CLASSI_FIN==5` por PCR ou outro tipo de diagnóstico. 
+
+Essa variável é `pcr_test`, com as categorias: `pcr_sars2` se PCR_SARS2 == 1; `ds_pcr_out` se PCR_SARS2 for `NA` e tem as palavras "SARS|COVID|COV|CORONA|CIVID" no `DS_PCR_OUT`; `pcr_pos_nada_outro` se PCR positivo (CRITERIO == 1 e PCR_RESUL == 1) e não tem resultado positivo para nenhum outro agente etiológico.  
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#criar a variavel de pcr_test pelas variaveis de pcr
+dados7 <- dados7 %>%
+  mutate(pcr_test = case_when(PCR_SARS2 == 1 ~ "pcr_sars2",
+                              (is.na(PCR_SARS2) &
+                                stringr::str_detect(DS_PCR_OUT, "SARS|COVID|COV|CORONA|CIVID") &
+                                  !stringr::str_detect(DS_PCR_OUT, "63|43|229|HK|RINO|SINCI|PARE")
+                              ) ~ "ds_pcr_out",
+                              (
+                                PCR_RESUL == 1 & #pcr positivo e caso finalizado, 
+                                  #mas nenhum outro agente etiologico
+                                  CRITERIO == 1 &
+                                  is.na(PCR_SARS2) &
+                                  is.na(DS_PCR_OUT) &
+                                  (PCR_RINO  != 1 |
+                                     is.na(PCR_RINO)) &
+                                  (POS_PCRFLU != 1 | is.na(POS_PCRFLU)) &
+                                  (PCR_OUTRO != 1 | is.na(PCR_OUTRO)) &
+                                  (POS_PCROUT != 1 | is.na(POS_PCROUT)) &
+                                  (is.na(PCR_VSR)) &
+                                  (is.na(PCR_METAP)) &
+                                  (is.na(PCR_PARA1))
+                              ) ~ "pcr_pos_nada_outro",
+                              TRUE ~ "não"
+                              )
+         )
+```
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+with(dados7, freq(pcr_test))
+```
+
+Agora iremos filtrar os casos com pcr_test!=não que são os casos onde podem ser covid-19 apenas por PCR :
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+dados7<- read.csv("dados_COVID_21-05-2021.csv")
+dados8 <- dados7 %>% 
+  filter(pcr_test == "pcr_sars2")
+```
+
+Há `r dim(dados8)[1]` observações na base de dados.
+
+```{r}
+write.csv(dados8,"dados_covid.csv")
+```

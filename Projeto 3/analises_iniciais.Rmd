@@ -1,0 +1,918 @@
+---
+title: "Análises Iniciais - SRAG 2009 a 2019"
+date: "14/06/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r pacotes,echo=FALSE,message=FALSE,warning =FALSE,error=FALSE,results='hide'}
+loadlibrary <- function(x) {
+  if (!require(x, character.only = TRUE)) {
+    install.packages(x, dependencies = T)
+    if (!require(x, character.only = TRUE))
+      stop("Package not found")
+  }
+}
+
+packages <-
+  c(
+    "dplyr",
+    "lubridate",
+    "readr",
+    "ggplot2",
+    "kableExtra",
+    "tables",
+    "questionr",
+    "car",
+    "data.table",
+    "magrittr",
+    "tidyverse",
+    "readxl",
+    "summarytools",
+    "zoo",
+    "grid",
+    "gridExtra",
+    "cowplot",
+    "modelsummary",
+    "effectsize",
+    "rcompanion",
+    "DescTools"
+  )
+lapply(packages, loadlibrary)
+
+setwd("~/Observatorio-git/Projeto 3")
+#carregando as base de dados 
+dados_2009<- read.csv2("influd09_limpo-final.csv")
+dados_2010 <- read.csv2("influd10_limpo-final.csv")
+dados_2011 <- read.csv2("influd11_limpo_final.csv")
+dados_2012 <- read.csv2("influd12_limpo_final.csv")
+dados_2013 <- read.csv2("influd13_limpo_final.csv")
+dados_2014 <- read_csv2("influd14_limpo-final.csv")
+dados_2015 <- read.csv2("influd15_limpo-final.csv")
+dados_2016 <- read.csv2("influd16_limpo-final.csv")
+dados_2017 <- read.csv2("influd17_limpo-final.csv")
+dados_2018 <- read.csv2("influd18_limpo-final.csv")
+dados_2019 <- read.csv2("influd19_limpo-27.04.2020-final.csv")
+```
+
+Filtros
+
+```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+dados2009 <- filter(dados_2009, CS_SEXO == "F")
+dados2010 <- filter(dados_2010, CS_SEXO == "F")
+dados2011 <- filter(dados_2011, CS_SEXO == "F")
+dados2012 <- filter(dados_2012, CS_SEXO == "F")
+dados2013 <- filter(dados_2013, CS_SEXO == "F")
+dados2014 <- filter(dados_2014, CS_SEXO == "F")
+dados2015 <- filter(dados_2015, CS_SEXO == "F")
+dados2016 <- filter(dados_2016, CS_SEXO == "F")
+dados2017 <- filter(dados_2017, CS_SEXO == "F")
+dados2018 <- filter(dados_2018, CS_SEXO == "F")
+dados2019 <- filter(dados_2019, CS_SEXO == "F")
+
+
+dados2009 <- dados2009 %>%
+  mutate(
+    classi_gesta = case_when(
+      CS_GESTANT == 1  ~ "1tri",
+      CS_GESTANT == 2  ~ "2tri",
+      CS_GESTANT == 3  ~ "3tri",
+      CS_GESTANT == 4  ~ "IG_ig",
+      CS_GESTANT == 5  ~ "não",
+      TRUE ~ NA_character_
+    )
+  )
+dados2009 <- dados2009 %>% 
+  filter(!is.na(classi_gesta))
+
+dados2010 <- dados2010 %>%
+  mutate(
+    classi_gesta = case_when(
+      CS_GESTANT == 1  ~ "1tri",
+      CS_GESTANT == 2  ~ "2tri",
+      CS_GESTANT == 3  ~ "3tri",
+      CS_GESTANT == 4  ~ "IG_ig",
+      CS_GESTANT == 5  ~ "não",
+      TRUE ~ NA_character_
+    )
+  )
+
+dados2010 <- dados2010 %>% 
+  filter(!is.na(classi_gesta))
+
+dados2011 <- dados2011 %>%
+  mutate(
+    classi_gesta = case_when(
+      CS_GESTANT == 1  ~ "1tri",
+      CS_GESTANT == 2  ~ "2tri",
+      CS_GESTANT == 3  ~ "3tri",
+      CS_GESTANT == 4  ~ "IG_ig",
+      CS_GESTANT == 5  ~ "não",
+      TRUE ~ NA_character_
+    )
+  )
+dados2011 <- dados2011 %>% 
+  filter(!is.na(classi_gesta))
+
+# Criando a variável gestante_SN
+dados2009 <- dados2009 %>%
+  mutate(gestante_SN = ifelse(CS_GESTANT == 5, "não", "sim"))
+dados2010 <- dados2010 %>%
+  mutate(gestante_SN = ifelse(CS_GESTANT == 5, "não", "sim"))
+dados2011 <- dados2011 %>%
+  mutate(gestante_SN = ifelse(CS_GESTANT == 5, "não", "sim"))
+
+
+#CONSIDERAR CASOS PUERPERAS DE 2012 ? (22 CASOS APENAS)
+dados2012<-  dados2012 %>%
+  mutate(gest_puerp = case_when(CS_GESTANT == 1 | CS_GESTANT == 2 | 
+                               CS_GESTANT == 3 | CS_GESTANT == 4   ~ "Gestante",
+                               PUERPERA == 1 & (CS_GESTANT > 3 | 
+                                                  is.na(CS_GESTANT)) ~ "Puerpera",
+                               TRUE ~ NA_character_))
+dados2012 <- dados2012 %>% 
+  filter(!is.na(gest_puerp))
+
+
+dados2013<-  dados2013 %>%
+  mutate(gest_puerp = case_when(CS_GESTANT == 1 | CS_GESTANT == 2 | 
+                               CS_GESTANT == 3 | CS_GESTANT == 4   ~ "Gestante",
+                               PUERPERA == 1 & (CS_GESTANT > 3 | 
+                                                  is.na(CS_GESTANT)) ~ "Puerpera",
+                               TRUE ~ NA_character_))
+dados2013 <- dados2013 %>% 
+  filter(!is.na(gest_puerp))
+
+dados2014<-  dados2014 %>%
+  mutate(gest_puerp = case_when(CS_GESTANT == 1 | CS_GESTANT == 2 | 
+                               CS_GESTANT == 3 | CS_GESTANT == 4   ~ "Gestante",
+                               PUERPERA == 1 & (CS_GESTANT > 3 | 
+                                                  is.na(CS_GESTANT)) ~ "Puerpera",
+                               TRUE ~ NA_character_))
+dados2014 <- dados2014 %>% 
+  filter(!is.na(gest_puerp))
+
+dados2015<-  dados2015 %>%
+  mutate(gest_puerp = case_when(CS_GESTANT == 1 | CS_GESTANT == 2 | 
+                               CS_GESTANT == 3 | CS_GESTANT == 4   ~ "Gestante",
+                               PUERPERA == 1 & (CS_GESTANT > 3 | 
+                                                  is.na(CS_GESTANT)) ~ "Puerpera",
+                               TRUE ~ NA_character_))
+dados2015 <- dados2015 %>% 
+  filter(!is.na(gest_puerp))
+
+dados2016<-  dados2016 %>%
+  mutate(gest_puerp = case_when(CS_GESTANT == 1 | CS_GESTANT == 2 | 
+                               CS_GESTANT == 3 | CS_GESTANT == 4   ~ "Gestante",
+                               PUERPERA == 1 & (CS_GESTANT > 3 | 
+                                                  is.na(CS_GESTANT)) ~ "Puerpera",
+                               TRUE ~ NA_character_))
+dados2016 <- dados2016 %>% 
+  filter(!is.na(gest_puerp))
+
+dados2017<-  dados2017 %>%
+  mutate(gest_puerp = case_when(CS_GESTANT == 1 | CS_GESTANT == 2 | 
+                               CS_GESTANT == 3 | CS_GESTANT == 4   ~ "Gestante",
+                               PUERPERA == 1 & (CS_GESTANT > 3 | 
+                                                  is.na(CS_GESTANT)) ~ "Puerpera",
+                               TRUE ~ NA_character_))
+dados2017 <- dados2017 %>% 
+  filter(!is.na(gest_puerp))
+
+dados2018<-  dados2018 %>%
+  mutate(gest_puerp = case_when(CS_GESTANT == 1 | CS_GESTANT == 2 | 
+                               CS_GESTANT == 3 | CS_GESTANT == 4   ~ "Gestante",
+                               PUERPERA == 1 & (CS_GESTANT > 3 | 
+                                                  is.na(CS_GESTANT)) ~ "Puerpera",
+                               TRUE ~ NA_character_))
+dados2018 <- dados2018 %>% 
+  filter(!is.na(gest_puerp))
+
+dados2019<-  dados2019 %>%
+  mutate(gest_puerp = case_when(CS_GESTANT == 1 | CS_GESTANT == 2 | 
+                               CS_GESTANT == 3 | CS_GESTANT == 4   ~ "Gestante",
+                               PUERPERA == 1 & (CS_GESTANT > 3 | 
+                                                  is.na(CS_GESTANT)) ~ "Puerpera",
+                               TRUE ~ NA_character_))
+dados2019 <- dados2019 %>% 
+  filter(!is.na(gest_puerp))
+```
+
+## 2009 
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#nova variável com label de classi_fin
+dados2009 <- dados2009 %>% 
+  filter(gestante_SN=="sim")
+dados2009 <-  dados2009 %>%
+  mutate(classi_fin = case_when(CLASSI_FIN == 1 ~ "H1N1",
+                             CLASSI_FIN == 2 ~ "Outro",
+                             CLASSI_FIN == 3 ~ "Descartado",
+                             CLASSI_FIN == 4 | CLASSI_FIN == 9 ~"Sem informação",
+                               TRUE ~ NA_character_))
+
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para CLASSI_FIN
+questionr::freq(
+  dados2009$classi_fin,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+```
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#nova variável com label de evolucao
+dados2009 <- dados2009 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              EVOLUCAO == 3 ~ "obito",
+                              EVOLUCAO == 4 ~ "obito",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada classi_fin e evolucao
+with(dados2009, ctable(classi_fin, evolucao, prop="r", useNA = "no"))
+```
+
+## 2010 
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#nova variável com label de classi_fin
+dados2010 <- dados2010 %>% 
+  filter(gestante_SN=="sim")
+dados2010 <-  dados2010 %>%
+  mutate(classi_fin = case_when(CLASSI_FIN == 1 ~ "H1N1",
+                             CLASSI_FIN == 2 ~ "Outro",
+                             CLASSI_FIN == 3 ~ "Descartado",
+                             CLASSI_FIN == 4 | CLASSI_FIN == 9 ~"Sem informação",
+                               TRUE ~ NA_character_))
+
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para CLASSI_FIN
+questionr::freq(
+  dados2010$classi_fin,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+```
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#nova variável com label de evolucao
+dados2010 <- dados2010 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              EVOLUCAO == 3 ~ "obito",
+                              EVOLUCAO == 4 ~ "obito",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada classi_fin e evolucao
+with(dados2010, ctable(classi_fin, evolucao, prop="r", useNA = "no"))
+```
+
+## 2011 
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#nova variável com label de classi_fin
+dados2011 <- dados2011 %>% 
+  filter(gestante_SN=="sim")
+dados2011 <-  dados2011 %>%
+  mutate(classi_fin = case_when(CLASSI_FIN == 1 ~ "H1N1",
+                             CLASSI_FIN == 2 ~ "Outro",
+                             CLASSI_FIN == 3 ~ "Descartado",
+                             CLASSI_FIN == 4 | CLASSI_FIN == 9 ~"Sem informação",
+                               TRUE ~ NA_character_))
+
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para CLASSI_FIN
+questionr::freq(
+  dados2011$classi_fin,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+```
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#nova variável com label de evolucao
+dados2011 <- dados2011 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              EVOLUCAO == 3 ~ "obito",
+                              EVOLUCAO == 4 ~ "obito",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada classi_fin e evolucao
+with(dados2011, ctable(classi_fin, evolucao, prop="r", useNA = "no"))
+```
+
+## 2012 
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#nova variável com label de classi_fin
+dados2012 <-  dados2012 %>%
+  mutate(classi_fin = case_when(CLASSI_FIN == 1 ~ "Influenza",
+                             CLASSI_FIN == 2 ~ "Outros virus",
+                             CLASSI_FIN == 3 ~ "Outros agentes",
+                             CLASSI_FIN == 4 ~ "Não especificado",
+                             CLASSI_FIN == 9 ~"Sem informação",
+                               TRUE ~ NA_character_))
+
+```
+
+### Gestantes
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para CLASSI_FIN
+dados_gest2012 <- dados2012 %>% 
+  filter(gest_puerp == "Gestante")
+questionr::freq(
+  dados_gest2012$classi_fin,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+```
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#nova variável com label de evolucao
+dados_gest2012 <- dados_gest2012 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              EVOLUCAO == 3 ~ "obito",
+                              EVOLUCAO == 4 ~ "obito",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada classi_fin e evolucao
+with(dados_gest2012, ctable(classi_fin, evolucao, prop="r", useNA = "no"))
+```
+
+
+### Puerpera
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para CLASSI_FIN
+dados_puerp2012 <- dados2012 %>% 
+  filter(gest_puerp == "Puerpera")
+questionr::freq(
+  dados_puerp2012$classi_fin,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+```
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#nova variável com label de evolucao
+dados_puerp2012 <- dados_puerp2012 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              EVOLUCAO == 3 ~ "obito",
+                              EVOLUCAO == 4 ~ "obito",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada classi_fin e evolucao
+with(dados_puerp2012, ctable(classi_fin, evolucao, prop="r", useNA = "no"))
+```
+
+
+## 2013 
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#nova variável com label de classi_fin
+dados2013 <-  dados2013 %>%
+  mutate(classi_fin = case_when(CLASSI_FIN == 1 ~ "Influenza",
+                             CLASSI_FIN == 2 ~ "Outros virus",
+                             CLASSI_FIN == 3 ~ "Outros agentes",
+                             CLASSI_FIN == 4 ~ "Não especificado",
+                             CLASSI_FIN == 9 ~"Sem informação",
+                               TRUE ~ NA_character_))
+
+```
+
+### Gestantes
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para CLASSI_FIN
+dados_gest2013 <- dados2013 %>% 
+  filter(gest_puerp == "Gestante")
+questionr::freq(
+  dados_gest2013$classi_fin,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+```
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#nova variável com label de evolucao
+dados_gest2013 <- dados_gest2013 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada classi_fin e evolucao
+with(dados_gest2013, ctable(classi_fin, evolucao, prop="r", useNA = "no"))
+```
+
+
+### Puerpera
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para CLASSI_FIN
+dados_puerp2013 <- dados2013 %>% 
+  filter(gest_puerp == "Puerpera")
+questionr::freq(
+  dados_puerp2013$classi_fin,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+```
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#nova variável com label de evolucao
+dados_puerp2013 <- dados_puerp2013 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada classi_fin e evolucao
+with(dados_puerp2013, ctable(classi_fin, evolucao, prop="r", useNA = "no"))
+```
+
+## 2014 
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#nova variável com label de classi_fin
+dados2014 <-  dados2014 %>%
+  mutate(classi_fin = case_when(CLASSI_FIN == 1 ~ "Influenza",
+                             CLASSI_FIN == 2 ~ "Outros virus",
+                             CLASSI_FIN == 3 ~ "Outros agentes",
+                             CLASSI_FIN == 4 ~ "Não especificado",
+                             CLASSI_FIN == 9 ~"Sem informação",
+                               TRUE ~ NA_character_))
+
+```
+
+### Gestantes
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para CLASSI_FIN
+dados_gest2014 <- dados2014 %>% 
+  filter(gest_puerp == "Gestante")
+questionr::freq(
+  dados_gest2014$classi_fin,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+```
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#nova variável com label de evolucao
+dados_gest2014 <- dados_gest2014 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada classi_fin e evolucao
+with(dados_gest2014, ctable(classi_fin, evolucao, prop="r", useNA = "no"))
+```
+
+
+### Puerpera
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para CLASSI_FIN
+dados_puerp2014 <- dados2014 %>% 
+  filter(gest_puerp == "Puerpera")
+questionr::freq(
+  dados_puerp2014$classi_fin,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+```
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#nova variável com label de evolucao
+dados_puerp2014 <- dados_puerp2014 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada classi_fin e evolucao
+with(dados_puerp2014, ctable(classi_fin, evolucao, prop="r", useNA = "no"))
+```
+
+## 2015 
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#nova variável com label de classi_fin
+dados2015 <-  dados2015 %>%
+  mutate(classi_fin = case_when(CLASSI_FIN == 1 ~ "Influenza",
+                             CLASSI_FIN == 2 ~ "Outros virus",
+                             CLASSI_FIN == 3 ~ "Outros agentes",
+                             CLASSI_FIN == 4 ~ "Não especificado",
+                             CLASSI_FIN == 9 ~"Sem informação",
+                               TRUE ~ NA_character_))
+
+```
+
+### Gestantes
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para CLASSI_FIN
+dados_gest2015 <- dados2015 %>% 
+  filter(gest_puerp == "Gestante")
+questionr::freq(
+  dados_gest2015$classi_fin,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+```
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#nova variável com label de evolucao
+dados_gest2015 <- dados_gest2015 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada classi_fin e evolucao
+with(dados_gest2015, ctable(classi_fin, evolucao, prop="r", useNA = "no"))
+```
+
+
+### Puerpera
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para CLASSI_FIN
+dados_puerp2015 <- dados2015 %>% 
+  filter(gest_puerp == "Puerpera")
+questionr::freq(
+  dados_puerp2015$classi_fin,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+```
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#nova variável com label de evolucao
+dados_puerp2015 <- dados_puerp2015 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada classi_fin e evolucao
+with(dados_puerp2015, ctable(classi_fin, evolucao, prop="r", useNA = "no"))
+```
+
+## 2016 
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#nova variável com label de classi_fin
+dados2016 <-  dados2016 %>%
+  mutate(classi_fin = case_when(CLASSI_FIN == 1 ~ "Influenza",
+                             CLASSI_FIN == 2 ~ "Outros virus",
+                             CLASSI_FIN == 3 ~ "Outros agentes",
+                             CLASSI_FIN == 4 ~ "Não especificado",
+                             CLASSI_FIN == 9 ~"Sem informação",
+                               TRUE ~ NA_character_))
+
+```
+
+### Gestantes
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para CLASSI_FIN
+dados_gest2016 <- dados2016 %>% 
+  filter(gest_puerp == "Gestante")
+questionr::freq(
+  dados_gest2016$classi_fin,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+```
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#nova variável com label de evolucao
+dados_gest2016 <- dados_gest2016 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada classi_fin e evolucao
+with(dados_gest2016, ctable(classi_fin, evolucao, prop="r", useNA = "no"))
+```
+
+
+### Puerpera
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para CLASSI_FIN
+dados_puerp2016 <- dados2016 %>% 
+  filter(gest_puerp == "Puerpera")
+questionr::freq(
+  dados_puerp2016$classi_fin,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+```
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#nova variável com label de evolucao
+dados_puerp2016 <- dados_puerp2016 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada classi_fin e evolucao
+with(dados_puerp2016, ctable(classi_fin, evolucao, prop="r", useNA = "no"))
+```
+
+
+## 2017 
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#nova variável com label de classi_fin
+dados2017 <-  dados2017 %>%
+  mutate(classi_fin = case_when(CLASSI_FIN == 1 ~ "Influenza",
+                             CLASSI_FIN == 2 ~ "Outros virus",
+                             CLASSI_FIN == 3 ~ "Outros agentes",
+                             CLASSI_FIN == 4 ~ "Não especificado",
+                             CLASSI_FIN == 9 ~"Sem informação",
+                               TRUE ~ NA_character_))
+
+```
+
+### Gestantes
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para CLASSI_FIN
+dados_gest2017 <- dados2017 %>% 
+  filter(gest_puerp == "Gestante")
+questionr::freq(
+  dados_gest2017$classi_fin,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+```
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#nova variável com label de evolucao
+dados_gest2017 <- dados_gest2017 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada classi_fin e evolucao
+with(dados_gest2017, ctable(classi_fin, evolucao, prop="r", useNA = "no"))
+```
+
+
+### Puerpera
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para CLASSI_FIN
+dados_puerp2017 <- dados2017 %>% 
+  filter(gest_puerp == "Puerpera")
+questionr::freq(
+  dados_puerp2017$classi_fin,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+```
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#nova variável com label de evolucao
+dados_puerp2017 <- dados_puerp2017 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada classi_fin e evolucao
+with(dados_puerp2017, ctable(classi_fin, evolucao, prop="r", useNA = "no"))
+```
+
+## 2018 
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#nova variável com label de classi_fin
+dados2018 <-  dados2018 %>%
+  mutate(classi_fin = case_when(CLASSI_FIN == 1 ~ "Influenza",
+                             CLASSI_FIN == 2 ~ "Outros virus",
+                             CLASSI_FIN == 3 ~ "Outros agentes",
+                             CLASSI_FIN == 4 ~ "Não especificado",
+                             CLASSI_FIN == 9 ~"Sem informação",
+                               TRUE ~ NA_character_))
+
+```
+
+### Gestantes
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para CLASSI_FIN
+dados_gest2018 <- dados2018 %>% 
+  filter(gest_puerp == "Gestante")
+questionr::freq(
+  dados_gest2018$classi_fin,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+```
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#nova variável com label de evolucao
+dados_gest2018 <- dados_gest2018 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada classi_fin e evolucao
+with(dados_gest2018, ctable(classi_fin, evolucao, prop="r", useNA = "no"))
+```
+
+
+### Puerpera
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para CLASSI_FIN
+dados_puerp2018 <- dados2018 %>% 
+  filter(gest_puerp == "Puerpera")
+questionr::freq(
+  dados_puerp2018$classi_fin,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+```
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#nova variável com label de evolucao
+dados_puerp2018 <- dados_puerp2018 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada classi_fin e evolucao
+with(dados_puerp2018, ctable(classi_fin, evolucao, prop="r", useNA = "no"))
+```
+
+## 2019 
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#nova variável com label de classi_fin
+dados2019 <-  dados2019 %>%
+  mutate(classi_fin = case_when(CLASSI_FIN == 1 ~ "Influenza",
+                             CLASSI_FIN == 2 ~ "Outros virus",
+                             CLASSI_FIN == 3 ~ "Outros agentes",
+                             CLASSI_FIN == 4 ~ "Não especificado",
+                             CLASSI_FIN == 9 ~"Sem informação",
+                               TRUE ~ NA_character_))
+
+```
+
+### Gestantes
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para CLASSI_FIN
+dados_gest2019 <- dados2019 %>% 
+  filter(gest_puerp == "Gestante")
+questionr::freq(
+  dados_gest2019$classi_fin,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+```
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#nova variável com label de evolucao
+dados_gest2019 <- dados_gest2019 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada classi_fin e evolucao
+with(dados_gest2019, ctable(classi_fin, evolucao, prop="r", useNA = "no"))
+```
+
+
+### Puerpera
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela de frequencia para CLASSI_FIN
+dados_puerp2019 <- dados2019 %>% 
+  filter(gest_puerp == "Puerpera")
+questionr::freq(
+  dados_puerp2019$classi_fin,
+  cum = FALSE,
+  total = TRUE,
+  na.last = FALSE,
+  valid = FALSE
+) %>%
+  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+```
+
+```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
+#nova variável com label de evolucao
+dados_puerp2019 <- dados_puerp2019 %>%
+  mutate(evolucao = case_when(EVOLUCAO == 1 ~ "cura",
+                              EVOLUCAO == 2 ~ "obito",
+                              TRUE ~ NA_character_))
+```
+
+```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#tabela cruzada classi_fin e evolucao
+with(dados_puerp2019, ctable(classi_fin, evolucao, prop="r", useNA = "no"))
+```
