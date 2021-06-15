@@ -1,6 +1,6 @@
 ---
 title: "Análises Iniciais - SRAG 2009 a 2019"
-date: "14/06/2021"
+date: "15/06/2021"
 output: pdf_document
 ---
 
@@ -58,7 +58,11 @@ dados_2018 <- read.csv2("influd18_limpo-final.csv")
 dados_2019 <- read.csv2("influd19_limpo-27.04.2020-final.csv")
 ```
 
-Filtros
+Neste relatório iremos análisar as variáveis "classi_fin" e "evolução" da base SRAG dos anos de 2009 a 2019.
+
+## Filtros
+
+Primeiro vamos selecionar os casos em que o sexo seja "F"(Feminino) e o paciente seja gestante ou puérpera. Vamos criar uma variável que vai indicar se a pessoa é gestante ou puérpera nos casos onde a variável "Puerpera" existe.
 
 ```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
 dados2009 <- filter(dados_2009, CS_SEXO == "F")
@@ -225,7 +229,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+  kable(caption = "Tabela de frequências para o diagnostico final 2009", digits = 2) 
 ```
 
 ```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
@@ -267,7 +271,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+  kable(caption = "Tabela de frequências para o diagnostico final 2010", digits = 2) 
 ```
 
 ```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
@@ -309,7 +313,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+  kable(caption = "Tabela de frequências para o diagnostico final 2011", digits = 2) 
 ```
 
 ```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
@@ -354,7 +358,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+  kable(caption = "Tabela de frequências para evolucao 2012 gestantes", digits = 2) 
 ```
 
 ```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
@@ -386,7 +390,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+  kable(caption = "Tabela de frequências para evolucao 2012 puérperas", digits = 2) 
 ```
 
 ```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
@@ -432,7 +436,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+  kable(caption = "Tabela de frequências para evolucao 2013 gestantes", digits = 2) 
 ```
 
 ```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
@@ -462,7 +466,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+  kable(caption = "Tabela de frequências para evolucao 2013 puérperas", digits = 2) 
 ```
 
 ```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
@@ -505,7 +509,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+  kable(caption = "Tabela de frequências para evolucao 2014 gestantes", digits = 2) 
 ```
 
 ```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
@@ -535,7 +539,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+  kable(caption = "Tabela de frequências para evolucao 2014 puérperas", digits = 2) 
 ```
 
 ```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
@@ -578,7 +582,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+  kable(caption = "Tabela de frequências para evolucao 2015 gestantes", digits = 2) 
 ```
 
 ```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
@@ -608,7 +612,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+  kable(caption = "Tabela de frequências para evolucao 2015 puérperas", digits = 2) 
 ```
 
 ```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
@@ -651,7 +655,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+  kable(caption = "Tabela de frequências para evolucao 2016 gestantes", digits = 2) 
 ```
 
 ```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
@@ -681,7 +685,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+  kable(caption = "Tabela de frequências para evolucao 2016 puérperas", digits = 2) 
 ```
 
 ```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
@@ -725,7 +729,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+  kable(caption = "Tabela de frequências para evolucao 2017 gestantes", digits = 2) 
 ```
 
 ```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
@@ -755,7 +759,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+  kable(caption = "Tabela de frequências para evolucao 2017 puérperas", digits = 2) 
 ```
 
 ```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
@@ -798,7 +802,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+  kable(caption = "Tabela de frequências para evolucao 2018 gestantes", digits = 2) 
 ```
 
 ```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
@@ -828,7 +832,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+  kable(caption = "Tabela de frequências para evolucao 2018 puérperas", digits = 2) 
 ```
 
 ```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
@@ -871,7 +875,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+  kable(caption = "Tabela de frequências para evolucao 2019 gestantes", digits = 2) 
 ```
 
 ```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
@@ -901,7 +905,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para o diagnostico final", digits = 2) 
+  kable(caption = "Tabela de frequências para evolucao 2019 puérperas", digits = 2) 
 ```
 
 ```{r, echo=FALSE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}

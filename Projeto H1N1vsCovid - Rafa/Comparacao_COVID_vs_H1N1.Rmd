@@ -1,6 +1,6 @@
 ---
 title: "Análises do SIVEP-Gripe casos de H1N1 e COVID-19"
-date: "14/06/2021"
+date: "15/06/2021"
 output:
   pdf_document: 
     latex_engine: xelatex
@@ -65,19 +65,6 @@ q25 <- function(x) stats::quantile(x, p=0.25, na.rm=TRUE)
 q75 <- function(x) stats::quantile(x, p=0.75, na.rm=TRUE)
 IQR <- function(x) round(q75(x)-q25(x), 2)
 n <- function(x)  sum(!is.na(x))
-
-#vamos usar pro teste de Breslow-Day
-teste_breslowday <- function(dados_covid, dados_h1n1, var) {
-  tab <- array(0, dim = c(2,2,2))
-  tab[,,1] <- table(dados_h1n1$gestante_SN, dados_h1n1[[var]])
-  tab[,,2] <- table(dados_covid$gestante_SN, dados_covid[[var]])
-  a <- BreslowDayTest(tab, correct = TRUE)
-  out <- data.frame(comp = c("h1n1-covid"),
-    stat = c(a$statistic),
-    p_valor = c(a$p.value)
-    )
-  return(out)
- }
 ```
 
 Nesse relatório analisaremos algumas variáveis nas pandemias de H1N1 e da COVID-19. Além disso, nosso foco será comparar dentro dessas pandemias os grupos de gestantes versus não gestantes. E por útlimo, faremos uma breve análise dentro do grupo de gestantes nas duas pandemias (ideia para o 2º artigo).
@@ -107,8 +94,6 @@ dados_h1n1 <-  dados_h1n1 %>%
                              CRITERIO == 2  ~ "Clínico",
                                TRUE ~ NA_character_))
 ```
-
-
 
 
 ```{r, echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
@@ -169,6 +154,22 @@ questionr::freq(
 
 Como observado nas tabelas existem algumas observações que tem como reposta critério clínico, sendo essas mesmas observações com resposta positivo para covid-19 e H1N1. 
 
+Função Breslow-Day
+
+```{r,echo=TRUE,message=FALSE,warning =FALSE,error=FALSE}
+#vamos usar pro teste de Breslow-Day
+teste_breslowday <- function(dados_covid, dados_h1n1, var) {
+  tab <- array(0, dim = c(2,2,2))
+  tab[,,1] <- table(dados_h1n1$gestante_SN, dados_h1n1[[var]])
+  tab[,,2] <- table(dados_covid$gestante_SN, dados_covid[[var]])
+  a <- BreslowDayTest(tab, correct = TRUE)
+  out <- data.frame(comp = c("h1n1-covid"),
+    stat = c(a$statistic),
+    p_valor = c(a$p.value)
+    )
+  return(out)
+ }
+```
 
 # Letalidade de gestante e não gestantes H1N1 
 
@@ -196,7 +197,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para Evolucao base H1N1", digits = 2) 
+  kable(caption = "Tabela de frequências para Evolucao base H1N1 - Gestantes", digits = 2) 
 ```
 
 ## Não gestante (independente do sexo)
@@ -217,7 +218,7 @@ questionr::freq(
   na.last = FALSE,
   valid = FALSE
 ) %>%
-  kable(caption = "Tabela de frequências para Evolucao base H1N1", digits = 2) 
+  kable(caption = "Tabela de frequências para Evolucao base H1N1 - Não gestantes", digits = 2) 
 ```
 
 # Variáveis de caracterização
@@ -1343,7 +1344,7 @@ c
 interpret_d(c$Cohens_d,rules="cohen1988")
 ```
 
-##Faixa Etária
+## Faixa Etária
 
 ```{r, echo=TRUE, eval= TRUE, message=FALSE, warning =FALSE, error=FALSE}
 #tabela cruzada
