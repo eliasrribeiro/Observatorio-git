@@ -1,0 +1,433 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Seleção dos casos de H1N1 para paper de comparação com COVID-19},
+  pdfauthor={Gestantes},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+\ifluatex
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Seleção dos casos de H1N1 para paper de comparação com COVID-19}
+\author{Gestantes}
+\date{18/06/2021}
+
+\begin{document}
+\maketitle
+
+\hypertarget{sobre-a-base-de-dados-e-pacotes-do-r-utilizados}{%
+\section{Sobre a base de dados e pacotes do R
+utilizados}\label{sobre-a-base-de-dados-e-pacotes-do-r-utilizados}}
+
+A seguir são carregados os pacotes do R
+(\url{https://www.r-project.org}) utilizados para filtragem e tratamento
+dos dados.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#carregar pacotes}
+\NormalTok{loadlibrary }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(x) \{}
+  \ControlFlowTok{if}\NormalTok{ (}\SpecialCharTok{!}\FunctionTok{require}\NormalTok{(x, }\AttributeTok{character.only =} \ConstantTok{TRUE}\NormalTok{)) \{}
+    \FunctionTok{install.packages}\NormalTok{(x, }\AttributeTok{dependencies =}\NormalTok{ T)}
+    \ControlFlowTok{if}\NormalTok{ (}\SpecialCharTok{!}\FunctionTok{require}\NormalTok{(x, }\AttributeTok{character.only =} \ConstantTok{TRUE}\NormalTok{))}
+      \FunctionTok{stop}\NormalTok{(}\StringTok{"Package not found"}\NormalTok{)}
+\NormalTok{  \}}
+\NormalTok{\}}
+
+\NormalTok{packages }\OtherTok{\textless{}{-}}
+  \FunctionTok{c}\NormalTok{(}
+    \StringTok{"dplyr"}\NormalTok{,}
+    \StringTok{"lubridate"}\NormalTok{,}
+    \StringTok{"readr"}\NormalTok{,}
+    \StringTok{"ggplot2"}\NormalTok{,}
+    \StringTok{"kableExtra"}\NormalTok{,}
+    \StringTok{"tables"}\NormalTok{,}
+    \StringTok{"questionr"}\NormalTok{,}
+    \StringTok{"car"}\NormalTok{,}
+    \StringTok{"data.table"}\NormalTok{,}
+    \StringTok{"magrittr"}\NormalTok{,}
+    \StringTok{"tidyverse"}\NormalTok{,}
+    \StringTok{"readxl"}\NormalTok{,}
+    \StringTok{"summarytools"}\NormalTok{,}
+    \StringTok{"zoo"}\NormalTok{,}
+    \StringTok{"grid"}\NormalTok{,}
+    \StringTok{"gridExtra"}\NormalTok{,}
+    \StringTok{"cowplot"}
+\NormalTok{  )}
+\FunctionTok{lapply}\NormalTok{(packages, loadlibrary)}
+\end{Highlighting}
+\end{Shaded}
+
+A base de dados SIVEP-Gripe (Sistema de Informação da Vigilância
+Epidemiológica da Gripe) tem os registros dos casos e óbitos de SRAG
+(Síndrome Respiratória Aguda Grave). A notificação é compulsória para
+síndrome gripal (caracterizado por pelo menos dois dos seguintes sinais
+e sintomas: febre, mesmo que referida, calafrios, dor de garganta, dor
+de cabeça, tosse, coriza, distúrbios olfatórios ou de paladar) e que tem
+dispneia / desconforto respiratório ou pressão persistente no peito ou
+Saturação de O2 menor que 95\% no ar ambiente ou cor azulada dos lábios
+ou rosto. Indivíduos assintomáticos com confirmação laboratorial por
+biologia molecular ou exame imunológico para infecção por COVID-19
+também são relatados.
+
+Para notificações no Sivep-Gripe, os casos hospitalizados em hospitais
+públicos e privados e todas as mortes devido a infecções respiratórias
+agudas graves, independentemente da hospitalização, devem ser
+considerados.
+
+A vigilância da SRAG no Brasil é desenvolvida pelo Ministério da Saúde
+(MS), por meio da Secretaria de Vigilância em Saúde (SVS), desde a
+pandemia de Influenza A (H1N1) em 2009. Mais informações em
+\url{https://coronavirus.saude.gov.br/definicao-de-caso-e-notificacao}.
+
+O período analisado compreende de dados epidemiológicos de 2009 e 2010,
+com banco de dados obtido em 05/05/2021 no site
+\url{https://opendatasus.saude.gov.br/dataset/bd-srag-2009-a-2012}. Os
+dados de 2009 e de 2010 são carregados e combinados abaixo:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DocumentationTok{\#\#\#\#\#\#\#\#\# carregando as bases de dados \#\#\#\#\#\#\#\#\#\#\#}
+\CommentTok{\#2009 e 2010}
+\NormalTok{dados2009 }\OtherTok{\textless{}{-}} \FunctionTok{read\_delim}\NormalTok{(}
+  \StringTok{"influd09\_limpo{-}final.csv"}\NormalTok{,}
+  \StringTok{";"}\NormalTok{,}
+  \AttributeTok{escape\_double =} \ConstantTok{FALSE}\NormalTok{,}
+  \AttributeTok{locale =} \FunctionTok{locale}\NormalTok{(}\AttributeTok{encoding =} \StringTok{"ISO{-}8859{-}2"}\NormalTok{),}
+  \AttributeTok{trim\_ws =} \ConstantTok{TRUE}
+\NormalTok{)}
+
+\NormalTok{dados2010 }\OtherTok{\textless{}{-}} \FunctionTok{read\_delim}\NormalTok{(}
+  \StringTok{"influd10\_limpo{-}final.csv"}\NormalTok{,}
+  \StringTok{";"}\NormalTok{,}
+  \AttributeTok{escape\_double =} \ConstantTok{FALSE}\NormalTok{,}
+  \AttributeTok{locale =} \FunctionTok{locale}\NormalTok{(}\AttributeTok{encoding =} \StringTok{"ISO{-}8859{-}2"}\NormalTok{),}
+  \AttributeTok{trim\_ws =} \ConstantTok{TRUE}
+\NormalTok{)}
+
+\NormalTok{dados\_2009 }\OtherTok{\textless{}{-}}\NormalTok{ dados2009 }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{rename}\NormalTok{(}\AttributeTok{SRAGFINAL =}\NormalTok{ SRAG2009FINAL)}
+
+\NormalTok{dados\_2010 }\OtherTok{\textless{}{-}}\NormalTok{ dados2010 }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{rename}\NormalTok{(}\AttributeTok{SRAGFINAL =}\NormalTok{ SRAG2010FINAL)}
+
+\NormalTok{dados }\OtherTok{\textless{}{-}} \FunctionTok{full\_join}\NormalTok{(dados\_2009, dados\_2010)}
+
+\NormalTok{sem }\OtherTok{\textless{}{-}} \DecValTok{19}
+
+\FunctionTok{memory.limit}\NormalTok{(}\DecValTok{999999}\NormalTok{)}
+
+\CommentTok{\#Criar variavel de ano do caso}
+\NormalTok{dados }\OtherTok{\textless{}{-}}\NormalTok{  dados }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{dt\_sint =} \FunctionTok{as.Date}\NormalTok{(DT\_SIN\_PRI, }\AttributeTok{format =} \StringTok{"\%d/\%m/\%Y"}\NormalTok{),}
+    \AttributeTok{ano =}\NormalTok{ lubridate}\SpecialCharTok{::}\FunctionTok{year}\NormalTok{(dt\_sint),}
+    \AttributeTok{mes =}\NormalTok{ lubridate}\SpecialCharTok{::}\FunctionTok{month}\NormalTok{(dt\_sint)}
+\NormalTok{  )}
+\end{Highlighting}
+\end{Shaded}
+
+Há atualmente 217167 observações na base de dados e são as variáveis:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{names}\NormalTok{(dados)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   [1] "DT_NOTIFIC" "ID_MUNICIP" "SEM_NOT"    "NU_ANO"     "SG_UF_NOT" 
+##   [6] "DT_SIN_PRI" "DT_NASC"    "NU_IDADE_N" "CS_SEXO"    "CS_GESTANT"
+##  [11] "CS_RACA"    "CS_ESCOL_N" "SG_UF"      "ID_MN_RESI" "ID_OCUPA_N"
+##  [16] "VACINA"     "FEBRE"      "TOSSE"      "CALAFRIO"   "DISPNEIA"  
+##  [21] "GARGANTA"   "ARTRALGIA"  "MIALGIA"    "CONJUNTIV"  "CORIZA"    
+##  [26] "DIARREIA"   "OUTRO_SIN"  "OUTRO_DES"  "CARDIOPATI" "PNEUMOPATI"
+##  [31] "RENAL"      "HEMOGLOBI"  "IMUNODEPRE" "TABAGISMO"  "METABOLICA"
+##  [36] "OUT_MORBI"  "MORB_DESC"  "HOSPITAL"   "DT_INTERNA" "CO_UF_INTE"
+##  [41] "CO_MU_INTE" "DT_PCR"     "PCR_AMOSTR" "PCR_OUT"    "PCR_RES"   
+##  [46] "PCR_ETIOL"  "PCR_TIPO_H" "PCR_TIPO_N" "DT_CULTURA" "CULT_AMOST"
+##  [51] "CULT_OUT"   "CULT_RES"   "DT_HEMAGLU" "HEMA_RES"   "HEMA_ETIOL"
+##  [56] "HEM_TIPO_H" "HEM_TIPO_N" "DT_RAIOX"   "RAIOX_RES"  "RAIOX_OUT" 
+##  [61] "CLASSI_FIN" "CLASSI_OUT" "CRITERIO"   "TPAUTOCTO"  "DOENCA_TRA"
+##  [66] "EVOLUCAO"   "DT_OBITO"   "DT_ENCERRA" "DT_DIGITA"  "MONITORA"  
+##  [71] "SRAGFINAL"  "OBES_IMC"   "OUT_AMOST"  "DS_OAGEETI" "DS_OUTMET" 
+##  [76] "DS_OUTSUB"  "OUT_ANTIV"  "DT_COLETA"  "DT_ENTUTI"  "DT_ANTIVIR"
+##  [81] "DT_IFI"     "DT_OUTMET"  "DT_SAIDUTI" "RES_ADNO"   "AMOSTRA"   
+##  [86] "HEPATICA"   "NEUROLOGIC" "OBESIDADE"  "PUERPERA"   "SIND_DOWN" 
+##  [91] "RES_FLUA"   "RES_FLUB"   "UTI"        "IFI"        "PCR"       
+##  [96] "RES_OUTRO"  "OUT_METODO" "RES_PARA1"  "RES_PARA2"  "RES_PARA3" 
+## [101] "DESC_RESP"  "SATURACAO"  "ST_TIPOFI"  "TIPO_PCR"   "ANTIVIRAL" 
+## [106] "SUPORT_VEN" "RES_VSR"    "RES_FLUASU" "AVE_10_DIA" "dt_sint"   
+## [111] "ano"        "mes"
+\end{verbatim}
+
+Para ver o dicionário das variáveis, acesse:
+\url{https://opendatasus.saude.gov.br/dataset/c9a8f286-44bc-444e-94b4-f4ceded3af2c/resource/8e4ee33a-a7bd-42d1-9505-bbf0eb7e6141/download/dic_dados_influenza-pandemica_antigo.pdf-2009-a-set-2012.pdf}
+
+\hypertarget{filtragem-e-tratamento-dos-dados-para-projeto}{%
+\section{Filtragem e tratamento dos dados para
+projeto}\label{filtragem-e-tratamento-dos-dados-para-projeto}}
+
+A primeira filtragem consiste em selecionar os casos de maio de 2009 até
+maio de 2010.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#filtrando só os casos de maio de 2020 até maio de 2010}
+\NormalTok{dados1 }\OtherTok{\textless{}{-}} \FunctionTok{filter}\NormalTok{(dados, }
+\NormalTok{                 (mes }\SpecialCharTok{\textgreater{}=}\DecValTok{5} \SpecialCharTok{\&}\NormalTok{ ano }\SpecialCharTok{==} \DecValTok{2009}\NormalTok{) }\SpecialCharTok{|}\NormalTok{ (mes }\SpecialCharTok{\textless{}=}\DecValTok{5} \SpecialCharTok{\&}\NormalTok{ ano }\SpecialCharTok{==} \DecValTok{2010}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+Há 212584 observações na base de dados.
+
+A próxima seleção será de pessoas do sexo feminino:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#filtrando F}
+\NormalTok{dados2 }\OtherTok{\textless{}{-}} \FunctionTok{filter}\NormalTok{(dados1, CS\_SEXO }\SpecialCharTok{==} \StringTok{"F"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Há 115357 observações na base de dados.
+
+O próximo passo é filtrar só as mulheres entre 10 e 49 anos.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Filtrando pela faixa de idade de interesse}
+\NormalTok{dados3 }\OtherTok{\textless{}{-}}\NormalTok{ dados2 }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(NU\_IDADE\_N }\SpecialCharTok{\textgreater{}} \DecValTok{4009} \SpecialCharTok{\&}\NormalTok{ NU\_IDADE\_N }\SpecialCharTok{\textless{}} \DecValTok{4050}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Há 75717 observações na base de dados.
+
+A próxima seleção são os casos de covid indicado pela variável
+\texttt{CLASSI\_FIN}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{with}\NormalTok{(dados3, }\FunctionTok{freq}\NormalTok{(CLASSI\_FIN))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Frequencies  
+## dados3$CLASSI_FIN  
+## Type: Numeric  
+## 
+##                Freq   % Valid   % Valid Cum.   % Total   % Total Cum.
+## ----------- ------- --------- -------------- --------- --------------
+##           1   42997    59.723         59.723    56.786         56.786
+##           2    1596     2.217         61.940     2.108         58.894
+##           3   27346    37.984         99.924    36.116         95.010
+##           4      25     0.035         99.958     0.033         95.043
+##           9      30     0.042        100.000     0.040         95.083
+##        <NA>    3723                              4.917        100.000
+##       Total   75717   100.000        100.000   100.000        100.000
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{dados4 }\OtherTok{\textless{}{-}}\NormalTok{ dados3 }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(CLASSI\_FIN }\SpecialCharTok{==} \DecValTok{1}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Há 42997 observações na base de dados.
+
+Agora vamos criar a variável se \texttt{CLASSI\_FIN==1} por PCR ou outro
+tipo de diagnóstico.
+
+Essa variável é \texttt{pcr\_test}, com as categorias: \texttt{pcr\_pos}
+se PCR positivo (CRITERIO == 1 e PCR\_RES == 1) e \texttt{não} caso
+contrário.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#criar a variavel de pcr\_test pelas variaveis de pcr}
+\NormalTok{dados4 }\OtherTok{\textless{}{-}}\NormalTok{ dados4 }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pcr\_test =} \FunctionTok{case\_when}\NormalTok{(PCR\_RES }\SpecialCharTok{==} \DecValTok{1} \SpecialCharTok{\&} \CommentTok{\#pcr positivo }
+\NormalTok{                                PCR\_ETIOL}\SpecialCharTok{==} \DecValTok{1}  \SpecialCharTok{\textasciitilde{}} \StringTok{"pcr\_pos"}\NormalTok{,}
+                              \ConstantTok{TRUE} \SpecialCharTok{\textasciitilde{}} \StringTok{"não"}
+\NormalTok{                              ))}
+\end{Highlighting}
+\end{Shaded}
+
+Agora iremos filtrar os casos com pcr\_test!=não que são os casos onde
+podem ser covid-19 apenas por PCR :
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{dados5 }\OtherTok{\textless{}{-}}\NormalTok{ dados4 }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(pcr\_test }\SpecialCharTok{==} \StringTok{"pcr\_pos"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Há 10659 observações na base de dados.
+
+Agora vamos selecionar só as pessoas gestantes ou não gestante.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{with}\NormalTok{(dados5, }\FunctionTok{freq}\NormalTok{(CS\_GESTANT))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Frequencies  
+## dados5$CS_GESTANT  
+## Type: Numeric  
+## 
+##                Freq   % Valid   % Valid Cum.   % Total   % Total Cum.
+## ----------- ------- --------- -------------- --------- --------------
+##           1     537      5.04           5.04      5.04           5.04
+##           2    1045      9.80          14.84      9.80          14.84
+##           3    1126     10.56          25.41     10.56          25.41
+##           4      76      0.71          26.12      0.71          26.12
+##           5    6070     56.95          83.07     56.95          83.07
+##           6     666      6.25          89.31      6.25          89.31
+##           9    1139     10.69         100.00     10.69         100.00
+##        <NA>       0                               0.00         100.00
+##       Total   10659    100.00         100.00    100.00         100.00
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{dados5 }\OtherTok{\textless{}{-}}\NormalTok{ dados5 }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{classi\_gesta =} \FunctionTok{case\_when}\NormalTok{(}
+\NormalTok{      CS\_GESTANT }\SpecialCharTok{==} \DecValTok{1}  \SpecialCharTok{\textasciitilde{}} \StringTok{"1tri"}\NormalTok{,}
+\NormalTok{      CS\_GESTANT }\SpecialCharTok{==} \DecValTok{2}  \SpecialCharTok{\textasciitilde{}} \StringTok{"2tri"}\NormalTok{,}
+\NormalTok{      CS\_GESTANT }\SpecialCharTok{==} \DecValTok{3}  \SpecialCharTok{\textasciitilde{}} \StringTok{"3tri"}\NormalTok{,}
+\NormalTok{      CS\_GESTANT }\SpecialCharTok{==} \DecValTok{4}  \SpecialCharTok{\textasciitilde{}} \StringTok{"IG\_ig"}\NormalTok{,}
+\NormalTok{      CS\_GESTANT }\SpecialCharTok{==} \DecValTok{5}  \SpecialCharTok{\textasciitilde{}} \StringTok{"não"}\NormalTok{,}
+      \ConstantTok{TRUE} \SpecialCharTok{\textasciitilde{}} \ConstantTok{NA\_character\_}
+\NormalTok{    )}
+\NormalTok{  )}
+
+\CommentTok{\#filtrando só gestante ou não gestante}
+\NormalTok{dados6 }\OtherTok{\textless{}{-}}\NormalTok{ dados5 }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\FunctionTok{is.na}\NormalTok{(classi\_gesta))}
+
+
+\CommentTok{\# Criando a variável gestante\_SN}
+\NormalTok{dados6 }\OtherTok{\textless{}{-}}\NormalTok{ dados6 }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{gestante\_SN =} \FunctionTok{ifelse}\NormalTok{(CS\_GESTANT }\SpecialCharTok{==} \DecValTok{5}\NormalTok{, }\StringTok{"não"}\NormalTok{, }\StringTok{"sim"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+Há 8854 observações na base de dados.
+
+\end{document}
